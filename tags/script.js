@@ -3,51 +3,66 @@ const input = ul.querySelector('input');
 const button = document.querySelector('button');
 const countNum = document.querySelector('.details span');
 
-const maxTag = 10;
-let tags = [];
+const tagObj = {
+    maxTag: 10,
+    tags: [],
 
-const countTag = () => {
-    countNum.innerText = maxTag - tags.length;
+    handleEvent() {
+        ul.addEventListener('keyup', (e) => this.addTag(e));
+        // button.addEventListener('click', this.removeAll); --> `this` is button
+        button.addEventListener('click', () => this.removeAll()); // --> this is tagObj
+    },
+
+    countTag() {
+        countNum.innerText = this.maxTag - this.tags.length;
+    },
+
+    createTag(e) {
+        ul.querySelectorAll('li').forEach((li) => li.remove());
+
+        this.tags
+            .slice()
+            .reverse()
+            .forEach((tag) => {
+                let liTag = `<li>${tag} <i class="uit uit-multiply" onclick="tagObj.removeTag(this, '${tag}')"></i></li>`;
+                ul.insertAdjacentHTML('afterbegin', liTag);
+            });
+
+        this.countTag();
+    },
+
+    removeTag(elem, tag) {
+        let index = this.tags.indexOf(tag);
+        this.tags.splice(index, 1);
+        elem.parentElement.remove();
+        this.countTag();
+    },
+
+    removeAll() {
+        this.tags.length = 0;
+        console.log(this);
+        ul.querySelectorAll('li').forEach((li) => li.remove());
+    },
+
+    addTag(e) {
+        if (e.key === 'Enter') {
+            let newTag = input.value.replace(/\s+/g, '');
+
+            if (this.tags.length < 10 && newTag.split(',').length < 10) {
+                newTag.split(',').forEach((tag) => {
+                    if (tag.length > 1 && !this.tags.includes(tag)) {
+                        this.tags.push(tag);
+                        this.createTag();
+                        e.target.value = '';
+                    }
+                });
+            }
+        }
+    },
+
+    start() {
+        this.handleEvent();
+    },
 };
 
-function createTag() {
-    ul.querySelectorAll('li').forEach((li) => li.remove());
-    tags.slice()
-        .reverse()
-        .forEach((tag) => {
-            let liTag = `<li>${tag} <i class="uit uit-multiply" onclick="removeTag(this, '${tag}')"></i></li>`;
-            ul.insertAdjacentHTML('afterbegin', liTag);
-        });
-    countTag();
-}
-
-function removeTag(elem, tag) {
-    const index = tags.indexOf(tag);
-    elem.parentElement.remove();
-    tags = [...tags.slice(0, index), ...tags.slice(index + 1, tags.length)];
-    input.focus();
-    countTag();
-}
-
-function addTag(e) {
-    if (e.key === 'Enter') {
-        let newTag = input.value.replace(/\s+/g, '');
-        
-        newTag.split(',').forEach((tag) => {
-            if (tag.length > 1 && !tags.includes(newTag)) {
-                tags.push(tag);
-                input.value = '';
-                createTag();
-            }
-        });
-    }
-}
-
-ul.addEventListener('keyup', addTag);
-
-button.addEventListener('click', removeAll);
-
-function removeAll() {
-    tags.length = 0;
-    ul.querySelectorAll('li').forEach((li) => li.remove());
-}
+tagObj.start();
